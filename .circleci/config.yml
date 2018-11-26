@@ -4,7 +4,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/rust:1.30
+      - image: rustlang/rust:nightly
 
     steps:
       - checkout
@@ -13,8 +13,9 @@ jobs:
       - run:
           name: Check formatting
           command: |
+            rustup component add rustfmt-preview
             rustfmt --version
-            cargo fmt -- --write-mode=diff
+            cargo fmt -- --check
       - run:
           name: Build
           command: |
