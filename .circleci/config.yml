@@ -1,0 +1,31 @@
+
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/rust:1.30
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: cache
+      - run:
+          name: Check formatting
+          command: |
+            rustfmt --version
+            cargo fmt -- --write-mode=diff
+      - run:
+          name: Build
+          command: |
+            rustc --version --verbose
+            cargo --version --verbose
+            cargo build
+      - run:
+          name: Test
+          command: cargo test
+      - save_cache:
+          key: cache
+          paths:
+            - "~/.cargo"
+            - "./target"
