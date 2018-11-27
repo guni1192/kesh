@@ -3,9 +3,9 @@ use std::ffi::CString;
 use std::io::{self, Write};
 use std::path::Path;
 
+use colored::*;
 use nix::sys::wait::{waitpid, WaitStatus};
 use nix::unistd::{execve, fork, ForkResult};
-use colored::*;
 
 fn input_cmd() -> String {
     let mut s = String::new();
@@ -24,7 +24,6 @@ fn split_cmd(command: String, cmds: &mut Vec<CString>) {
         cmds.push(c);
     }
 }
-
 
 fn execv_wrapper(line: String, path: CString) {
     let mut cmds = Vec::<CString>::new();
@@ -57,7 +56,7 @@ fn print_prompt() {
     print!(">> ");
 }
 
-fn realpath_from_string(cmd: String) -> Result<String, String>{
+fn realpath_from_string(cmd: String) -> Result<String, String> {
     let key = "PATH";
     match env::var_os(key) {
         Some(paths) => {
@@ -65,18 +64,14 @@ fn realpath_from_string(cmd: String) -> Result<String, String>{
                 let cmd_full_path = format!("{}/{}", path.to_str().unwrap(), cmd);
 
                 if Path::new(&cmd_full_path).exists() {
-                    return Ok(cmd_full_path)
+                    return Ok(cmd_full_path);
                 }
-
             }
             Err(format!("{} not found.", cmd))
         }
-        None => Err(format!("{} not found.", cmd))
+        None => Err(format!("{} not found.", cmd)),
     }
-
 }
-
-
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
@@ -95,5 +90,8 @@ fn main() {
 
 #[test]
 fn test_realpath_from_path() {
-    assert_eq!(realpath_from_string("bash".to_string()).unwrap(), "/bin/bash".to_string());
+    assert_eq!(
+        realpath_from_string("bash".to_string()).unwrap(),
+        "/bin/bash".to_string()
+    );
 }
