@@ -3,7 +3,8 @@ use std::ffi::CString;
 use std::io::{self, Write};
 
 use nix::sys::wait::{waitpid, WaitStatus};
-use nix::unistd::{execv, fork, ForkResult};
+use nix::unistd::{execve, fork, ForkResult};
+use colored::*;
 
 fn input_cmd() -> String {
     let mut s = String::new();
@@ -19,7 +20,8 @@ fn split_cmd(command: String, cmds: &mut Vec<CString>) {
     }
 }
 
-fn execv_wrapper(line: String) {
+
+fn execv_wrapper(line: String, path: CString) {
     let mut cmds = Vec::<CString>::new();
     split_cmd(line.clone(), &mut cmds);
 
@@ -34,7 +36,7 @@ fn execv_wrapper(line: String) {
             }
         }
         Ok(ForkResult::Child) => {
-            match execv(&cmds[0], &cmds) {
+            match execve(&cmds[0], &cmds, &[path]) {
                 Ok(_) => {}
                 Err(_) => println!("Command Not Found: {:?}", cmds.clone()),
             };
@@ -44,6 +46,9 @@ fn execv_wrapper(line: String) {
 }
 
 fn print_prompt() {
+    let current_path = env::current_dir().unwrap();
+    let current_path = current_path.to_str().unwrap();
+    println!("{}", current_path.blue());
     print!(">> ");
 }
 
@@ -55,6 +60,9 @@ fn main() {
         io::stdout().flush().unwrap();
 
         let line = input_cmd();
-        execv_wrapper(line);
+        let path = env::var("PATH").expect("Environment value not found:");
+        let environ = format!("PATH={}", path);
+        let environ = CString::new(environ).expect("Failed to convert string to char string: ");
+        execv_wrapper(line, environ);
     }
 }
