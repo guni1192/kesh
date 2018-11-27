@@ -10,13 +10,21 @@ mod prompt;
 
 fn input_cmd() -> String {
     let mut s = String::new();
-    std::io::stdin().read_line(&mut s).expect("hoge");
-    s.trim().parse().expect("foo")
+    std::io::stdin()
+        .read_line(&mut s)
+        .expect("Cannot read stdin");
+    s.trim().parse().expect("Cannot parse trim str")
 }
 
 fn split_cmd(command: String, cmds: &mut Vec<CString>) {
     let mut iter = command.split_whitespace();
-    let cmd = realpath_from_string(iter.next().unwrap().to_string());
+
+    let c = match iter.next() {
+        Some(cmd) => cmd.to_string(),
+        None => return,
+    };
+
+    let cmd = realpath_from_string(c);
     let cmd = CString::new(cmd).expect("Could not parse string to char string");
     cmds.push(cmd);
 
@@ -30,7 +38,9 @@ fn execv_wrapper(line: String, path: CString) {
     let mut cmds = Vec::<CString>::new();
     split_cmd(line.clone(), &mut cmds);
 
-    println!("{:?}", cmds.clone());
+    if cmds.len() == 0 {
+        return;
+    }
 
     match fork() {
         Ok(ForkResult::Parent { child, .. }) => {
