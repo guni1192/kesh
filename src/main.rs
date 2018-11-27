@@ -3,9 +3,10 @@ use std::ffi::CString;
 use std::io::{self, Write};
 use std::path::Path;
 
-use colored::*;
 use nix::sys::wait::{waitpid, WaitStatus};
 use nix::unistd::{execve, fork, ForkResult};
+
+mod prompt;
 
 fn input_cmd() -> String {
     let mut s = String::new();
@@ -49,13 +50,6 @@ fn execv_wrapper(line: String, path: CString) {
     }
 }
 
-fn print_prompt() {
-    let current_path = env::current_dir().unwrap();
-    let current_path = current_path.to_str().unwrap();
-    println!("{}", current_path.blue());
-    print!("% ");
-}
-
 fn realpath_from_string(cmd: String) -> String {
     let key = "PATH";
     match env::var_os(key) {
@@ -77,7 +71,7 @@ fn main() {
     env::set_var("RUST_BACKTRACE", "1");
 
     loop {
-        print_prompt();
+        prompt::print_prompt();
         io::stdout().flush().unwrap();
 
         let line = input_cmd();
