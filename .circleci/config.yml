@@ -21,10 +21,10 @@ jobs:
           command: |
             rustc --version --verbose
             cargo --version --verbose
-            cargo build
+            cargo build --verbose
       - run:
           name: Test
-          command: cargo test
+          command: cargo test --verbose
       - save_cache:
           key: cache
           paths:
