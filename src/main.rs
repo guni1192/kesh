@@ -15,7 +15,7 @@ fn input_cmd() -> String {
 
 fn split_cmd(command: String, cmds: &mut Vec<CString>) {
     let mut iter = command.split_whitespace();
-    let cmd = realpath_from_string(iter.next().unwrap().to_string()).unwrap();
+    let cmd = realpath_from_string(iter.next().unwrap().to_string());
     let cmd = CString::new(cmd).expect("Could not parse string to char string");
     cmds.push(cmd);
 
@@ -42,7 +42,7 @@ fn execv_wrapper(line: String, path: CString) {
         Ok(ForkResult::Child) => {
             match execve(&cmds[0], &cmds, &[path]) {
                 Ok(_) => {}
-                Err(_) => println!("Command Not Found: {:?}", cmds.clone()),
+                Err(_) => eprintln!("{:?} not found.", cmds[0].clone()),
             };
         }
         Err(err) => eprintln!("Fork faild: {}", err),
@@ -53,10 +53,10 @@ fn print_prompt() {
     let current_path = env::current_dir().unwrap();
     let current_path = current_path.to_str().unwrap();
     println!("{}", current_path.blue());
-    print!(">> ");
+    print!("% ");
 }
 
-fn realpath_from_string(cmd: String) -> Result<String, String> {
+fn realpath_from_string(cmd: String) -> String {
     let key = "PATH";
     match env::var_os(key) {
         Some(paths) => {
@@ -64,12 +64,12 @@ fn realpath_from_string(cmd: String) -> Result<String, String> {
                 let cmd_full_path = format!("{}/{}", path.to_str().unwrap(), cmd);
 
                 if Path::new(&cmd_full_path).exists() {
-                    return Ok(cmd_full_path);
+                    return cmd_full_path;
                 }
             }
-            Err(format!("{} not found.", cmd))
+            cmd
         }
-        None => Err(format!("{} not found.", cmd)),
+        None => cmd,
     }
 }
 
@@ -91,7 +91,7 @@ fn main() {
 #[test]
 fn test_realpath_from_path() {
     assert_eq!(
-        realpath_from_string("bash".to_string()).unwrap(),
+        realpath_from_string("bash".to_string()),
         "/bin/bash".to_string()
     );
 }
