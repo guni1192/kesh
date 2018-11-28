@@ -6,6 +6,7 @@ use std::path::Path;
 use nix::sys::wait::{waitpid, WaitStatus};
 use nix::unistd::{execve, fork, ForkResult};
 
+mod buildin;
 mod prompt;
 
 fn input_cmd() -> String {
@@ -39,6 +40,10 @@ fn execv_wrapper(line: String, path: CString) {
     split_cmd(line.clone(), &mut cmds);
 
     if cmds.len() == 0 {
+        return;
+    }
+
+    if buildin::select_buildin(cmds.clone()) {
         return;
     }
 
