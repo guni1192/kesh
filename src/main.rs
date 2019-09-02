@@ -17,33 +17,30 @@ fn input_cmd() -> String {
     s.trim().parse().expect("Cannot parse trim str")
 }
 
-fn split_cmd(command: String, cmds: &mut Vec<CString>) {
-    let mut iter = command.split_whitespace();
+fn split_cmd(command: String) -> Vec<CString> {
+    let mut args = Vec::<CString>::new();
+    let args_tmp: Vec<&str> = command.split_whitespace().collect();
 
-    let c = match iter.next() {
-        Some(cmd) => cmd.to_string(),
-        None => return,
-    };
-
-    let cmd = realpath_from_string(c);
-    let cmd = CString::new(cmd).expect("Could not parse string to char string");
-    cmds.push(cmd);
-
-    for x in iter {
-        let c = CString::new(x).expect("Could not parse string to char string");
-        cmds.push(c);
+    for i in 0..args_tmp.len() {
+        let cmd = if i == 0 {
+            CString::new(realpath_from_string(args_tmp[i].to_string()))
+        } else {
+            CString::new(args_tmp[i])
+        };
+        let cmd = cmd.expect("Could not parse string to char string");
+        args.push(cmd);
     }
+    args
 }
 
 fn execv_wrapper(line: String, path: CString) {
-    let mut cmds = Vec::<CString>::new();
-    split_cmd(line.clone(), &mut cmds);
+    let args = split_cmd(line.clone());
 
-    if cmds.len() == 0 {
+    if args.len() == 0 {
         return;
     }
 
-    if buildin::select_buildin(cmds.clone()) {
+    if buildin::select_buildin(args.clone()) {
         return;
     }
 
@@ -56,9 +53,9 @@ fn execv_wrapper(line: String, path: CString) {
             }
         }
         Ok(ForkResult::Child) => {
-            match execve(&cmds[0], &cmds, &[path]) {
+            match execve(&args[0], &args, &[path]) {
                 Ok(_) => {}
-                Err(_) => eprintln!("{:?} not found.", cmds[0].clone()),
+                Err(_) => eprintln!("{:?} not found.", args[0].clone()),
             };
         }
         Err(err) => eprintln!("Fork faild: {}", err),
