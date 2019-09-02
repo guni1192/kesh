@@ -95,7 +95,16 @@ fn main() {
     }
 }
 
-#[test]
-fn test_realpath_from_path() {
-    assert_eq!(realpath_from_string("bash"), "/bin/bash".to_string());
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_realpath_from_path() {
+        let v = vec!["/bin/bash", "/usr/bin/bash"];
+        assert!(v
+            .into_iter()
+            .find(|&x| x == realpath_from_string("bash"))
+            .is_some(),);
+    }
 }
