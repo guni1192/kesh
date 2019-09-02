@@ -23,11 +23,11 @@ fn split_cmd(command: &str) -> Vec<CString> {
     let mut args = Vec::<CString>::new();
     let args_tmp: Vec<&str> = command.split_whitespace().collect();
 
-    for i in 0..args_tmp.len() {
+    for (i, arg) in args_tmp.iter().enumerate() {
         let cmd = if i == 0 {
             CString::new(realpath_from_string(&args_tmp[i]))
         } else {
-            CString::new(args_tmp[i])
+            CString::new(*arg)
         };
         let cmd = cmd.expect("Could not parse string to char string");
         args.push(cmd);
@@ -38,7 +38,7 @@ fn split_cmd(command: &str) -> Vec<CString> {
 fn execv_wrapper(line: &str, path: CString) {
     let args = split_cmd(line);
 
-    if args.len() == 0 {
+    if args.is_empty() {
         return;
     }
 

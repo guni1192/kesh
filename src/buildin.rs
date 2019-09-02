@@ -9,9 +9,9 @@ pub fn select_buildin(args: Vec<CString>) -> bool {
     match cmd {
         "cd" => {
             do_chdir(args);
-            return true;
+            true
         }
-        _ => return false,
+        _ => false,
     }
 }
 
